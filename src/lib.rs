@@ -48,7 +48,7 @@
 //! struct State(u64);
 //!
 //! // A handler for "/" page.
-//! async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//! async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 //!     // Access the app state.
 //!     let state = req.data::<State>().unwrap();
 //!     println!("State value: {}", state.0);
@@ -57,13 +57,13 @@
 //! }
 //!
 //! // A handler for "/users/:userId" page.
-//! async fn user_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//! async fn user_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 //!     let user_id = req.param("userId").unwrap();
 //!     Ok(Response::new(Body::from(format!("Hello {}", user_id))))
 //! }
 //!
 //! // A middleware which logs an http request.
-//! async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+//! async fn logger(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
 //!     println!("{} {} {}", req.remote_addr(), req.method(), req.uri().path());
 //!     Ok(req)
 //! }
@@ -78,7 +78,7 @@
 //!         .unwrap()
 //! }
 //!
-//! // Create a `Router<Body, Infallible>` for response body type `hyper::Body`
+//! // Create a `Router<Body, Infallible>` for response body type `crate::Body`
 //! // and for handler error type `Infallible`.
 //! fn router() -> Router<Body, Infallible> {
 //!     // Create a router and specify the logger middleware and the handlers.
@@ -130,7 +130,7 @@
 //! use std::convert::Infallible;
 //!
 //! // A handler for "/about" page.
-//! async fn about_handler(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+//! async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 //!     Ok(Response::new(Body::from("About page")))
 //! }
 //!
@@ -328,7 +328,7 @@
 //!
 //! // The handler for a pre middleware.
 //! // It accepts a `req` and it transforms the `req` and passes it to the next middlewares.
-//! async fn my_pre_middleware_handler(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+//! async fn my_pre_middleware_handler(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
 //!     // Do some changes if required.
 //!     let transformed_req = req;
 //!
@@ -359,7 +359,7 @@
 //! use hyper::{Request, Body};
 //! use std::convert::Infallible;
 //!
-//! async fn logger_middleware_handler(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+//! async fn logger_middleware_handler(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
 //!     println!("{} {} {}", req.remote_addr(), req.method(), req.uri().path());
 //!     Ok(req)
 //! }
@@ -497,7 +497,7 @@
 //! struct State(u64);
 //!
 //! // A handler for "/" page.
-//! async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//! async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 //!     // Access the app state.
 //!     let state = req.data::<State>().unwrap();
 //!     println!("State value: {}", state.0);
@@ -506,7 +506,7 @@
 //! }
 //!
 //! // A middleware which logs an http request.
-//! async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+//! async fn logger(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
 //!     // You can also access the same state from middleware.
 //!     let state = req.data::<State>().unwrap();
 //!     println!("State value: {}", state.0);
@@ -529,7 +529,7 @@
 //!         .unwrap()
 //! }
 //!
-//! // Create a `Router<Body, Infallible>` for response body type `hyper::Body`
+//! // Create a `Router<Body, Infallible>` for response body type `crate::Body`
 //! // and for handler error type `Infallible`.
 //! fn router() -> Router<Body, Infallible> {
 //!     Router::builder()
@@ -578,7 +578,7 @@
 //! struct State(u64);
 //!
 //! // A handler for "/" page.
-//! async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//! async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 //!     // Access the app state.
 //!     let state = req.data::<Mutex<State>>().unwrap();
 //!     let mut lock = state.lock().unwrap();
@@ -590,7 +590,7 @@
 //!     Ok(Response::new(Body::from("Home page")))
 //! }
 //!
-//! // Create a `Router<Body, Infallible>` for response body type `hyper::Body`
+//! // Create a `Router<Body, Infallible>` for response body type `crate::Body`
 //! // and for handler error type `Infallible`.
 //! fn router() -> Router<Body, Infallible> {
 //!     Router::builder()
@@ -772,8 +772,8 @@ pub use self::router::{Router, RouterBuilder};
 #[doc(hidden)]
 pub use self::service::RequestService;
 pub use self::service::RequestServiceBuilder;
-pub use self::service::RouterService;
-pub use self::types::{RequestInfo, RouteParams};
+// pub use self::service::RouterService;
+pub use self::types::{RequestInfo, RouteParams, Body};
 
 mod constants;
 mod data_map;

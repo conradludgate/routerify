@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 
 pub struct State(pub i32);
 
-pub async fn pre_middleware(req: Request<Body>) -> Result<Request<Body>, routerify::Error> {
+pub async fn pre_middleware(req: Request<crate::Body>) -> Result<Request<crate::Body>, routerify::Error> {
     let data = req.data::<State>().map(|s| s.0).unwrap_or(0);
     println!("Pre Data: {}", data);
     println!("Pre Data2: {:?}", req.data::<u32>());
@@ -20,7 +20,7 @@ pub async fn post_middleware(res: Response<Body>, req_info: RequestInfo) -> Resu
     Ok(res)
 }
 
-pub async fn home_handler(req: Request<Body>) -> Result<Response<Body>, routerify::Error> {
+pub async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, routerify::Error> {
     let data = req.data::<State>().map(|s| s.0).unwrap_or(0);
     println!("Route Data: {}", data);
     println!("Route Data2: {:?}", req.data::<u32>());

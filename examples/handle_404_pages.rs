@@ -4,17 +4,17 @@ use std::io;
 use std::net::SocketAddr;
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("Home page")))
 }
 
 // A handler for "/about" page.
-async fn about_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("About page")))
 }
 
 // Define a handler to handle any non-existent routes i.e. a 404 handler.
-async fn handler_404(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn handler_404(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::builder()
         .status(StatusCode::NOT_FOUND)
         .body(Body::from("Page Not Found"))

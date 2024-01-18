@@ -4,12 +4,12 @@ use std::io;
 use std::net::SocketAddr;
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Err(io::Error::new(io::ErrorKind::Other, "Some errors"))
 }
 
 // A handler for "/about" page.
-async fn about_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("About page")))
 }
 

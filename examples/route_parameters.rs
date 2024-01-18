@@ -6,13 +6,13 @@ use std::io;
 use std::net::SocketAddr;
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("Home page")))
 }
 
 // Define a handler for "/users/:userName/books/:bookName" page which will have two
 // route parameters: `userName` and `bookName`.
-async fn user_book_handler(req: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn user_book_handler(req: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     let user_name = req.param("userName").unwrap();
     let book_name = req.param("bookName").unwrap();
 

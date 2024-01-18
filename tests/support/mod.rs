@@ -29,7 +29,7 @@ impl Serve {
 
 pub async fn serve<B, E>(router: Router<B, E>) -> Serve
 where
-    B: HttpBody + Send + Sync + 'static,
+    B: hyper::body::Body + Send + Sync + 'static,
     E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static,
     <B as HttpBody>::Data: Send + Sync + 'static,
     <B as HttpBody>::Error: Into<Box<dyn std::error::Error + Send + Sync>> + 'static,

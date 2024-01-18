@@ -50,9 +50,9 @@ async fn entrypoint(req: Request, _ctx: Context) -> Result<impl IntoResponse, Ha
     let remote_addr = get_remote_addr(&req);
     let (mut parts, body) = req.into_parts();
     let body = match body {
-        Body::Empty => hyper::Body::empty(),
-        Body::Text(t) => hyper::Body::from(t.into_bytes()),
-        Body::Binary(b) => hyper::Body::from(b),
+        Body::Empty => crate::Body::empty(),
+        Body::Text(t) => crate::Body::from(t.into_bytes()),
+        Body::Binary(b) => crate::Body::from(b),
     };
     let mut uri = format!("http://{}{}", SERVER_ADDR, parts.uri.path());
 

@@ -64,7 +64,7 @@ async fn can_respond_with_data_from_scope_state() {
         struct State {
             count: Arc<Mutex<u8>>,
         }
-        async fn list(req: Request<Body>) -> Result<Response<Body>, io::Error> {
+        async fn list(req: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
             let count = req.data::<State>().unwrap().count.lock().unwrap();
             Ok(Response::new(Body::from(format!("{}", count))))
         }
@@ -81,7 +81,7 @@ async fn can_respond_with_data_from_scope_state() {
         struct State {
             count: Arc<Mutex<u8>>,
         }
-        async fn list(req: Request<Body>) -> Result<Response<Body>, io::Error> {
+        async fn list(req: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
             let count = req.data::<State>().unwrap().count.lock().unwrap();
             Ok(Response::new(Body::from(format!("{}", count))))
         }
@@ -133,14 +133,14 @@ async fn can_propagate_request_context() {
     #[derive(Debug, Clone, PartialEq)]
     struct Id2(u32);
 
-    let before = |req: Request<Body>| async move {
+    let before = |req: Request<crate::Body>| async move {
         req.set_context(Id(42));
         let (parts, body) = req.into_parts();
         parts.set_context(Id2(42));
         Ok(Request::from_parts(parts, body))
     };
 
-    let index = |req: Request<Body>| async move {
+    let index = |req: Request<crate::Body>| async move {
         // Check `id` from `before()`.
         let id = req.context::<Id>().unwrap();
         assert_eq!(id, Id(42));

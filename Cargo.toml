@@ -24,11 +24,17 @@ hyper-http1 = ["hyper/http1"]
 hyper-http2 = ["hyper/http2"]
 
 [dependencies]
-hyper = { version = "0.14", default-features = false, features = ["server", "tcp"] }
-http = "0.2"
+bytes = "1"
+hyper = { version = "1", default-features = false, features = ["server"] }
+http = "1"
+http-body = "1"
+http-body-util = "0.1"
 regex = { version = "1", default-features = false, features = ["std"] }
 lazy_static = "1"
 percent-encoding = "2"
+futures-util = { version = "0.3" }
+sync_wrapper = "0.1.2"
+pin-project-lite = "0.2.13"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

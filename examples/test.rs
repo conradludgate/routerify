@@ -13,7 +13,7 @@ mod users {
         count: Arc<Mutex<u8>>,
     }
 
-    async fn list(req: Request<Body>) -> Result<Response<Body>, io::Error> {
+    async fn list(req: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
         let count = req.data::<State>().unwrap().count.lock().unwrap();
         Ok(Response::new(Body::from(format!("Suppliers: {}", count))))
     }
@@ -33,7 +33,7 @@ mod offers {
         count: Arc<Mutex<u8>>,
     }
 
-    async fn list(req: Request<Body>) -> Result<Response<Body>, io::Error> {
+    async fn list(req: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
         let count = req.data::<State>().unwrap().count.lock().unwrap();
 
         println!("I can also access parent state: {:?}", req.data::<String>().unwrap());

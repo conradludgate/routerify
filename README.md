@@ -70,7 +70,7 @@ use std::{convert::Infallible, net::SocketAddr};
 struct State(u64);
 
 // A handler for "/" page.
-async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
     // Access the app state.
     let state = req.data::<State>().unwrap();
     println!("State value: {}", state.0);
@@ -79,13 +79,13 @@ async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> 
 }
 
 // A handler for "/users/:userId" page.
-async fn user_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+async fn user_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
     let user_id = req.param("userId").unwrap();
     Ok(Response::new(Body::from(format!("Hello {}", user_id))))
 }
 
 // A middleware which logs an http request.
-async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+async fn logger(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
     println!("{} {} {}", req.remote_addr(), req.method(), req.uri().path());
     Ok(req)
 }
@@ -100,7 +100,7 @@ async fn error_handler(err: routerify::RouteError, _: RequestInfo) -> Response<B
         .unwrap()
 }
 
-// Create a `Router<Body, Infallible>` for response body type `hyper::Body`
+// Create a `Router<Body, Infallible>` for response body type `crate::Body`
 // and for handler error type `Infallible`.
 fn router() -> Router<Body, Infallible> {
     // Create a router and specify the logger middleware and the handlers.

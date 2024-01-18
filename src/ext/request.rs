@@ -104,7 +104,7 @@ pub trait RequestExt {
     ///
     /// # fn run() -> Router<Body, Infallible> {
     /// let router = Router::builder()
-    ///     .middleware(Middleware::pre(|req: Request<Body>| async move {
+    ///     .middleware(Middleware::pre(|req: Request<crate::Body>| async move {
     ///         req.set_context("example".to_string());
     ///
     ///         Ok(req)
@@ -130,7 +130,7 @@ fn params(ext: &http::Extensions) -> &RouteParams {
 }
 
 fn param<P: Into<String>>(ext: &http::Extensions, param_name: P) -> Option<&String> {
-    params(ext).get(&param_name.into())
+    params(ext).get(param_name.into())
 }
 
 fn remote_addr(ext: &http::Extensions) -> SocketAddr {
@@ -164,7 +164,7 @@ fn set_context<T: Send + Sync + Clone + 'static>(ext: &http::Extensions, val: T)
     ctx.set(val)
 }
 
-impl RequestExt for Request<hyper::Body> {
+impl RequestExt for Request<crate::Body> {
     fn params(&self) -> &RouteParams {
         params(self.extensions())
     }

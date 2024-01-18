@@ -5,12 +5,12 @@ use routerify::{Middleware, RequestInfo, Router, RouterService};
 use std::convert::Infallible;
 use std::net::SocketAddr;
 
-async fn before(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+async fn before(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
     req.set_context(tokio::time::Instant::now());
     Ok(req)
 }
 
-async fn hello(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+async fn hello(_: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
     Ok(Response::new(Body::from("Home page")))
 }
 

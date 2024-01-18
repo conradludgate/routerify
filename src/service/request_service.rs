@@ -2,31 +2,28 @@ use crate::helpers;
 use crate::router::Router;
 use crate::types::{RequestContext, RequestInfo, RequestMeta};
 use crate::Error;
-use hyper::{body::HttpBody, service::Service, Request, Response};
+use http_body::Body;
+use hyper::service::Service;
+use hyper::{Request, Response};
 use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::task::{Context, Poll};
 
 pub struct RequestService<B, E> {
     pub(crate) router: Arc<Router<B, E>>,
     pub(crate) remote_addr: SocketAddr,
 }
 
-impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
-    Service<Request<hyper::Body>> for RequestService<B, E>
+impl<B: Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+    Service<Request<crate::Body>> for RequestService<B, E>
 {
     type Response = Response<B>;
     type Error = crate::RouteError;
     #[allow(clippy::type_complexity)]
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, mut req: Request<hyper::Body>) -> Self::Future {
+    fn call(&self, mut req: Request<crate::Body>) -> Self::Future {
         let router = self.router.clone();
         let remote_addr = self.remote_addr;
 
@@ -65,7 +62,7 @@ pub struct RequestServiceBuilder<B, E> {
     router: Arc<Router<B, E>>,
 }
 
-impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+impl<B: Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
     RequestServiceBuilder<B, E>
 {
     pub fn new(mut router: Router<B, E>) -> crate::Result<Self> {
@@ -93,36 +90,34 @@ impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Se
 
 #[cfg(test)]
 mod tests {
-    use crate::{Error, RequestServiceBuilder, RouteError, Router};
-    use futures::future::poll_fn;
+    use crate::Body;
+    use crate::{Error, RequestServiceBuilder, Router};
     use http::Method;
+    use http_body_util::BodyExt;
     use hyper::service::Service;
-    use hyper::{Body, Request, Response};
+    use hyper::{Request, Response};
     use std::net::SocketAddr;
     use std::str::FromStr;
-    use std::task::Poll;
 
     #[tokio::test]
     async fn should_route_request() {
         const RESPONSE_TEXT: &str = "Hello world!";
         let remote_addr = SocketAddr::from_str("0.0.0.0:8080").unwrap();
-        let router: Router<hyper::body::Body, Error> = Router::builder()
+        let router: Router<Body, Error> = Router::builder()
             .get("/", |_| async move { Ok(Response::new(Body::from(RESPONSE_TEXT))) })
             .build()
             .unwrap();
         let req = Request::builder()
             .method(Method::GET)
             .uri("/")
-            .body(hyper::Body::empty())
+            .body(crate::Body::empty())
             .unwrap();
         let builder = RequestServiceBuilder::new(router).unwrap();
-        let mut service = builder.build(remote_addr);
-        poll_fn(|ctx| -> Poll<Result<(), RouteError>> { service.poll_ready(ctx) })
-            .await
-            .expect("request service is not ready");
-        let resp: Response<hyper::body::Body> = service.call(req).await.unwrap();
+        let service = builder.build(remote_addr);
+
+        let resp: Response<Body> = service.call(req).await.unwrap();
         let body = resp.into_body();
-        let body = String::from_utf8(hyper::body::to_bytes(body).await.unwrap().to_vec()).unwrap();
+        let body = String::from_utf8(body.collect().await.unwrap().to_bytes().to_vec()).unwrap();
         assert_eq!(RESPONSE_TEXT, body)
     }
 }

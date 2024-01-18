@@ -26,7 +26,7 @@ impl fmt::Display for ApiError {
 // In this case it's `ApiError`.
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, ApiError> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, ApiError> {
     // Simulate failure by returning `ApiError::Generic` variant.
     Err(ApiError::Generic("Something went wrong!".into()))
 }

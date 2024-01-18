@@ -9,18 +9,18 @@ use std::io;
 use std::net::SocketAddr;
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("Home page")))
 }
 
 // A handler for "/about" page.
-async fn about_handler(_: Request<Body>) -> Result<Response<Body>, io::Error> {
+async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, io::Error> {
     Ok(Response::new(Body::from("About page")))
 }
 
 // Define a pre middleware handler which will be executed on every request and
 // logs some meta.
-async fn logger_middleware(req: Request<Body>) -> Result<Request<Body>, io::Error> {
+async fn logger_middleware(req: Request<crate::Body>) -> Result<Request<crate::Body>, io::Error> {
     println!("{} {} {}", req.remote_addr(), req.method(), req.uri().path());
     Ok(req)
 }

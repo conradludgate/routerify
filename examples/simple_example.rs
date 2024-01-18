@@ -5,17 +5,17 @@ use routerify::{Middleware, Router, RouterService};
 use std::{convert::Infallible, net::SocketAddr};
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
     Ok(Response::new(Body::from("Home page")))
 }
 
 // A handler for "/about" page.
-async fn about_handler(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
     Ok(Response::new(Body::from("About page")))
 }
 
 // A middleware which logs an http request.
-async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
+async fn logger(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
     println!("{} {} {}", req.remote_addr(), req.method(), req.uri().path());
     Ok(req)
 }

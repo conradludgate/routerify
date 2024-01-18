@@ -1,16 +1,15 @@
 use crate::router::Router;
 use crate::service::request_service::{RequestService, RequestServiceBuilder};
-use hyper::{body::HttpBody, server::conn::AddrStream, service::Service};
+use hyper::service::Service;
 use std::convert::Infallible;
 use std::future::{ready, Ready};
-use std::task::{Context, Poll};
 
 /// A [`Service`](https://docs.rs/hyper/0.14.4/hyper/service/trait.Service.html) to process incoming requests.
 ///
 /// This `RouterService<B, E>` type accepts two type parameters: `B` and `E`.
 ///
 /// * The `B` represents the response body type which will be used by route handlers and the middlewares and this body type must implement
-///   the [HttpBody](https://docs.rs/hyper/0.14.4/hyper/body/trait.HttpBody.html) trait. For an instance, `B` could be [hyper::Body](https://docs.rs/hyper/0.14.4/hyper/body/struct.Body.html)
+///   the [HttpBody](https://docs.rs/hyper/0.14.4/hyper/body/trait.HttpBody.html) trait. For an instance, `B` could be [crate::Body](https://docs.rs/hyper/0.14.4/hyper/body/struct.Body.html)
 ///   type.
 /// * The `E` represents any error type which will be used by route handlers and the middlewares. This error type must implement the [std::error::Error](https://doc.rust-lang.org/std/error/trait.Error.html).
 ///
@@ -23,7 +22,7 @@ use std::task::{Context, Poll};
 /// use std::net::SocketAddr;
 ///
 /// // A handler for "/" page.
-/// async fn home(_: Request<Body>) -> Result<Response<Body>, Infallible> {
+/// async fn home(_: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
 ///     Ok(Response::new(Body::from("Home page")))
 /// }
 ///
@@ -57,7 +56,7 @@ pub struct RouterService<B, E> {
     builder: RequestServiceBuilder<B, E>,
 }
 
-impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
     RouterService<B, E>
 {
     /// Creates a new service with the provided router and it's ready to be used with the hyper [`serve`](https://docs.rs/hyper/0.14.4/hyper/server/struct.Builder.html#method.serve)
@@ -68,18 +67,14 @@ impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Se
     }
 }
 
-impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
     Service<&AddrStream> for RouterService<B, E>
 {
     type Response = RequestService<B, E>;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, conn: &AddrStream) -> Self::Future {
+    fn call(&self, conn: &AddrStream) -> Self::Future {
         let req_service = self.builder.build(conn.remote_addr());
 
         ready(Ok(req_service))

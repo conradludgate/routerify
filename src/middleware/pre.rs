@@ -6,8 +6,8 @@ use std::fmt::{self, Debug, Formatter};
 use std::future::Future;
 use std::pin::Pin;
 
-type Handler<E> = Box<dyn Fn(Request<hyper::Body>) -> HandlerReturn<E> + Send + Sync + 'static>;
-type HandlerReturn<E> = Box<dyn Future<Output = Result<Request<hyper::Body>, E>> + Send + 'static>;
+type Handler<E> = Box<dyn Fn(Request<crate::Body>) -> HandlerReturn<E> + Send + Sync + 'static>;
+type HandlerReturn<E> = Box<dyn Future<Output = Result<Request<crate::Body>, E>> + Send + 'static>;
 
 /// The pre middleware type. Refer to [Pre Middleware](./index.html#pre-middleware) for more info.
 ///
@@ -67,14 +67,14 @@ impl<E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static> PreMiddleware<
     pub fn new<P, H, R>(path: P, handler: H) -> crate::Result<PreMiddleware<E>>
     where
         P: Into<String>,
-        H: Fn(Request<hyper::Body>) -> R + Send + Sync + 'static,
-        R: Future<Output = Result<Request<hyper::Body>, E>> + Send + 'static,
+        H: Fn(Request<crate::Body>) -> R + Send + Sync + 'static,
+        R: Future<Output = Result<Request<crate::Body>, E>> + Send + 'static,
     {
-        let handler: Handler<E> = Box::new(move |req: Request<hyper::Body>| Box::new(handler(req)));
+        let handler: Handler<E> = Box::new(move |req: Request<crate::Body>| Box::new(handler(req)));
         PreMiddleware::new_with_boxed_handler(path, handler, 1)
     }
 
-    pub(crate) async fn process(&self, req: Request<hyper::Body>) -> crate::Result<Request<hyper::Body>> {
+    pub(crate) async fn process(&self, req: Request<crate::Body>) -> crate::Result<Request<crate::Body>> {
         let handler = self
             .handler
             .as_ref()

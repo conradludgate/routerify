@@ -1,5 +1,5 @@
 use crate::types::RequestInfo;
-use hyper::{body::HttpBody, Request, Response};
+use hyper::{Request, Response};
 use std::future::Future;
 
 pub use self::post::PostMiddleware;
@@ -13,7 +13,7 @@ mod pre;
 /// This `Middleware<B, E>` type accepts two type parameters: `B` and `E`.
 ///
 /// * The `B` represents the response body type which will be used by route handlers and the middlewares and this body type must implement
-///   the [HttpBody](https://docs.rs/hyper/0.14.4/hyper/body/trait.HttpBody.html) trait. For an instance, `B` could be [hyper::Body](https://docs.rs/hyper/0.14.4/hyper/body/struct.Body.html)
+///   the [HttpBody](https://docs.rs/hyper/0.14.4/hyper/body/trait.HttpBody.html) trait. For an instance, `B` could be [crate::Body](https://docs.rs/hyper/0.14.4/hyper/body/struct.Body.html)
 ///   type.
 /// * The `E` represents any error type which will be used by route handlers and the middlewares. This error type must implement the [std::error::Error](https://doc.rust-lang.org/std/error/trait.Error.html).
 #[derive(Debug)]
@@ -25,7 +25,7 @@ pub enum Middleware<B, E> {
     Post(PostMiddleware<B, E>),
 }
 
-impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
     Middleware<B, E>
 {
     /// Creates a pre middleware with a handler at the `/*` path.
@@ -48,8 +48,8 @@ impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Se
     /// ```
     pub fn pre<H, R>(handler: H) -> Middleware<B, E>
     where
-        H: Fn(Request<hyper::Body>) -> R + Send + Sync + 'static,
-        R: Future<Output = Result<Request<hyper::Body>, E>> + Send + 'static,
+        H: Fn(Request<crate::Body>) -> R + Send + Sync + 'static,
+        R: Future<Output = Result<Request<crate::Body>, E>> + Send + 'static,
     {
         Middleware::pre_with_path("/*", handler).unwrap()
     }
@@ -136,8 +136,8 @@ impl<B: HttpBody + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Se
     pub fn pre_with_path<P, H, R>(path: P, handler: H) -> crate::Result<Middleware<B, E>>
     where
         P: Into<String>,
-        H: Fn(Request<hyper::Body>) -> R + Send + Sync + 'static,
-        R: Future<Output = Result<Request<hyper::Body>, E>> + Send + 'static,
+        H: Fn(Request<crate::Body>) -> R + Send + Sync + 'static,
+        R: Future<Output = Result<Request<crate::Body>, E>> + Send + 'static,
     {
         Ok(Middleware::Pre(PreMiddleware::new(path, handler)?))
     }

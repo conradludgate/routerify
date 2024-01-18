@@ -3,12 +3,12 @@ use routerify::{Router, RouterService};
 use std::net::SocketAddr;
 
 // A handler for "/" page.
-async fn home_handler(_: Request<Body>) -> Result<Response<Body>, routerify::Error> {
+async fn home_handler(_: Request<crate::Body>) -> Result<Response<Body>, routerify::Error> {
     Err(routerify::Error::new("Some errors"))
 }
 
 // A handler for "/about" page.
-async fn about_handler(_: Request<Body>) -> Result<Response<Body>, routerify::Error> {
+async fn about_handler(_: Request<crate::Body>) -> Result<Response<Body>, routerify::Error> {
     Ok(Response::new(Body::from("About page")))
 }
 
