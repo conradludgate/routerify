@@ -1,11 +1,18 @@
 use self::support::{into_text, serve};
-use hyper::{Body, Client, Request, Response, StatusCode};
+use hyper::{Request, Response, StatusCode};
+use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::client::legacy::Client;
+use hyper_util::rt::TokioExecutor;
 use routerify::prelude::RequestExt;
-use routerify::{Middleware, RequestInfo, RouteError, Router};
+use routerify::{Body, Middleware, RequestInfo, RouteError, Router};
 use std::io;
 use std::sync::{Arc, Mutex};
 
 mod support;
+
+fn new_client() -> Client<HttpConnector, Body> {
+    Client::builder(TokioExecutor::new()).build(HttpConnector::new())
+}
 
 #[tokio::test]
 async fn can_perform_simple_get_request() {
@@ -16,7 +23,7 @@ async fn can_perform_simple_get_request() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -41,7 +48,7 @@ async fn can_perform_simple_get_request_boxed_error() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -61,6 +68,7 @@ async fn can_respond_with_data_from_scope_state() {
     // Creating two modules containing separate state and routes which expose that state directly...
     mod service1 {
         use super::*;
+        #[derive(Clone)]
         struct State {
             count: Arc<Mutex<u8>>,
         }
@@ -78,6 +86,7 @@ async fn can_respond_with_data_from_scope_state() {
 
     mod service2 {
         use super::*;
+        #[derive(Clone)]
         struct State {
             count: Arc<Mutex<u8>>,
         }
@@ -107,7 +116,7 @@ async fn can_respond_with_data_from_scope_state() {
     let serve = serve(router).await;
 
     // Ensure response contains service1's unique data.
-    let resp = Client::new()
+    let resp = new_client()
         .request(serve.new_request("GET", "/v1/service1").body(Body::empty()).unwrap())
         .await
         .unwrap();
@@ -115,7 +124,7 @@ async fn can_respond_with_data_from_scope_state() {
     assert_eq!("1", into_text(resp.into_body()).await);
 
     // Ensure response contains service2's unique data.
-    let resp = Client::new()
+    let resp = new_client()
         .request(serve.new_request("GET", "/v1/service2").body(Body::empty()).unwrap())
         .await
         .unwrap();
@@ -209,7 +218,7 @@ async fn can_propagate_request_context() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let _ = Client::new()
+    let _ = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -242,7 +251,7 @@ async fn can_extract_path_params() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -272,7 +281,7 @@ async fn can_extract_extension_path_params_1() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -302,7 +311,7 @@ async fn can_extract_extension_path_params_2() {
         .build()
         .unwrap();
     let serve = serve(router).await;
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -334,7 +343,7 @@ async fn do_not_execute_scoped_middleware_for_unscoped_path() {
         .unwrap();
 
     let serve = serve(router).await;
-    let _ = Client::new()
+    let _ = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -384,7 +393,7 @@ async fn execute_scoped_middleware_when_no_unscoped_match() {
         .unwrap();
 
     let serve = serve(router).await;
-    let _ = Client::new()
+    let _ = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -432,7 +441,7 @@ async fn can_handle_custom_errors() {
         .unwrap();
     let serve = serve(router).await;
 
-    let resp = Client::new()
+    let resp = new_client()
         .request(
             Request::builder()
                 .method("GET")
@@ -451,6 +460,7 @@ async fn can_handle_custom_errors() {
 
 #[tokio::test]
 async fn can_handle_pre_middleware_errors() {
+    #[derive(Clone)]
     struct State {}
     #[derive(Clone)]
     struct Ctx(i32);
@@ -484,7 +494,7 @@ async fn can_handle_pre_middleware_errors() {
         .unwrap();
 
     let serve = serve(router).await;
-    let _ = Client::new()
+    let _ = new_client()
         .request(
             Request::builder()
                 .method("GET")

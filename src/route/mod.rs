@@ -96,11 +96,7 @@ impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::E
         self.methods.contains(method)
     }
 
-    pub(crate) async fn process(
-        &self,
-        target_path: &str,
-        mut req: Request<crate::Body>,
-    ) -> crate::Result<Response<B>> {
+    pub(crate) async fn process(&self, target_path: &str, mut req: Request<crate::Body>) -> crate::Result<Response<B>> {
         self.push_req_meta(target_path, &mut req);
 
         let handler = self

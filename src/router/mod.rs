@@ -200,9 +200,7 @@ impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::E
                     Ok(Response::builder()
                         .status(StatusCode::NOT_FOUND)
                         .header(header::CONTENT_TYPE, "text/plain")
-                        .body(crate::Body::from(
-                            StatusCode::NOT_FOUND.canonical_reason().unwrap(),
-                        ))
+                        .body(crate::Body::from(StatusCode::NOT_FOUND.canonical_reason().unwrap()))
                         .expect("Couldn't create the default 404 response"))
                 })
                 .unwrap();
@@ -223,20 +221,19 @@ impl<B: hyper::body::Body + Send + Sync + 'static, E: Into<Box<dyn std::error::E
         }
 
         if let Some(router) = self.downcast_to_hyper_body_type() {
-            let handler: ErrHandler<crate::Body> =
-                ErrHandler::WithoutInfo(Box::new(move |err: RouteError| {
-                    Box::new(async move {
-                        Response::builder()
-                            .status(StatusCode::INTERNAL_SERVER_ERROR)
-                            .header(header::CONTENT_TYPE, "text/plain")
-                            .body(crate::Body::from(format!(
-                                "{}: {}",
-                                StatusCode::INTERNAL_SERVER_ERROR.canonical_reason().unwrap(),
-                                err
-                            )))
-                            .expect("Couldn't create a response while handling the server error")
-                    })
-                }));
+            let handler: ErrHandler<crate::Body> = ErrHandler::WithoutInfo(Box::new(move |err: RouteError| {
+                Box::new(async move {
+                    Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .header(header::CONTENT_TYPE, "text/plain")
+                        .body(crate::Body::from(format!(
+                            "{}: {}",
+                            StatusCode::INTERNAL_SERVER_ERROR.canonical_reason().unwrap(),
+                            err
+                        )))
+                        .expect("Couldn't create a response while handling the server error")
+                })
+            }));
             router.err_handler = Some(handler);
         } else {
             eprintln!(

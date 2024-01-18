@@ -3,6 +3,7 @@ use crate::router::Router;
 use crate::types::{RequestContext, RequestInfo, RequestMeta};
 use crate::Error;
 use http_body::Body;
+use hyper::body::Incoming;
 use hyper::service::Service;
 use hyper::{Request, Response};
 use std::future::Future;
@@ -13,6 +14,19 @@ use std::sync::Arc;
 pub struct RequestService<B, E> {
     pub(crate) router: Arc<Router<B, E>>,
     pub(crate) remote_addr: SocketAddr,
+}
+
+impl<B: Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>
+    Service<Request<Incoming>> for RequestService<B, E>
+{
+    type Response = Response<B>;
+    type Error = crate::RouteError;
+    #[allow(clippy::type_complexity)]
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
+
+    fn call(&self, req: Request<Incoming>) -> Self::Future {
+        self.call(req.map(crate::Body::new))
+    }
 }
 
 impl<B: Body + Send + Sync + 'static, E: Into<Box<dyn std::error::Error + Send + Sync>> + 'static>

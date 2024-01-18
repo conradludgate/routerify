@@ -773,7 +773,7 @@ pub use self::router::{Router, RouterBuilder};
 pub use self::service::RequestService;
 pub use self::service::RequestServiceBuilder;
 // pub use self::service::RouterService;
-pub use self::types::{RequestInfo, RouteParams, Body};
+pub use self::types::{Body, RequestInfo, RouteParams};
 
 mod constants;
 mod data_map;
