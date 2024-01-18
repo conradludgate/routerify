@@ -1,11 +1,16 @@
-use hyper::{Body, Request, Response, Server, StatusCode};
-use routerify::prelude::*;
-use routerify::{Middleware, RequestInfo, Router, RouterService};
+use http::StatusCode;
+use hyper::{Request, Response};
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn;
+// Import the routerify prelude traits.
+use routerify::{prelude::*, Body, Middleware, RequestInfo, RequestServiceBuilder, Router};
 use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
+#[derive(Clone)]
 pub struct State(pub i32);
 
-pub async fn pre_middleware(req: Request<crate::Body>) -> Result<Request<crate::Body>, routerify::Error> {
+pub async fn pre_middleware(req: Request<Body>) -> Result<Request<Body>, routerify::Error> {
     let data = req.data::<State>().map(|s| s.0).unwrap_or(0);
     println!("Pre Data: {}", data);
     println!("Pre Data2: {:?}", req.data::<u32>());
@@ -20,7 +25,7 @@ pub async fn post_middleware(res: Response<Body>, req_info: RequestInfo) -> Resu
     Ok(res)
 }
 
-pub async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, routerify::Error> {
+pub async fn home_handler(req: Request<Body>) -> Result<Response<Body>, routerify::Error> {
     let data = req.data::<State>().map(|s| s.0).unwrap_or(0);
     println!("Route Data: {}", data);
     println!("Route Data2: {:?}", req.data::<u32>());
@@ -80,17 +85,22 @@ async fn main() {
         .build()
         .unwrap();
 
-    // Create a Service from the router above to handle incoming requests.
-    let service = RouterService::new(router).unwrap();
+    let builder = RequestServiceBuilder::new(router).unwrap();
 
-    // The address on which the server will be listening.
     let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
-
-    // Create a server by passing the created service to `.serve` method.
-    let server = Server::bind(&addr).serve(service);
-
+    let listener = TcpListener::bind(addr).await.unwrap();
     println!("App is running on: {}", addr);
-    if let Err(err) = server.await {
-        eprintln!("Server error: {}", err);
+
+    loop {
+        let (stream, remote_addr) = listener.accept().await.unwrap();
+        let io = TokioIo::new(stream);
+        let service = builder.build(remote_addr);
+        tokio::task::spawn(async move {
+            let builder = conn::auto::Builder::new(TokioExecutor::new());
+            let res = builder.serve_connection(io, service).await;
+            if let Err(err) = res {
+                println!("Error serving connection: {:?}", err);
+            }
+        });
     }
 }

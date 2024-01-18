@@ -2,8 +2,7 @@ use hyper::{Request, Response};
 use hyper_util::rt::{TokioExecutor, TokioIo};
 use hyper_util::server::conn;
 // Import the routerify prelude traits.
-use routerify::{prelude::*, Body, RequestServiceBuilder};
-use routerify::{Middleware, Router};
+use routerify::{prelude::*, Body, Middleware, RequestServiceBuilder, Router};
 use std::{convert::Infallible, net::SocketAddr};
 use tokio::net::TcpListener;
 
