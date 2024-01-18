@@ -1,15 +1,19 @@
-use hyper::{Body, Request, Response, Server, StatusCode};
+use hyper::{Request, Response, StatusCode};
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn;
 // Import the routerify prelude traits.
-use routerify::prelude::*;
-use routerify::{Middleware, RequestInfo, Router, RouterService};
+use routerify::{prelude::*, Body, RequestServiceBuilder};
+use routerify::{Middleware, RequestInfo, Router};
 use std::{convert::Infallible, net::SocketAddr};
+use tokio::net::TcpListener;
 
 // Define an app state to share it across the route handlers, middlewares
 // and the error handler.
+#[derive(Clone)]
 struct State(u64);
 
 // A handler for "/" page.
-async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infallible> {
+async fn home_handler(req: Request<Body>) -> Result<Response<Body>, Infallible> {
     // Access the app state.
     let state = req.data::<State>().unwrap();
     println!("State value: {}", state.0);
@@ -18,7 +22,7 @@ async fn home_handler(req: Request<crate::Body>) -> Result<Response<Body>, Infal
 }
 
 // A middleware which logs an http request.
-async fn logger(req: Request<crate::Body>) -> Result<Request<crate::Body>, Infallible> {
+async fn logger(req: Request<Body>) -> Result<Request<Body>, Infallible> {
     // You can also access the same state from middleware.
     let state = req.data::<State>().unwrap();
     println!("State value: {}", state.0);
@@ -41,7 +45,7 @@ async fn error_handler(err: routerify::RouteError, req_info: RequestInfo) -> Res
         .unwrap()
 }
 
-// Create a `Router<Body, Infallible>` for response body type `crate::Body`
+// Create a `Router<Body, Infallible>` for response body type `Body`
 // and for handler error type `Infallible`.
 fn router() -> Router<Body, Infallible> {
     Router::builder()
@@ -59,17 +63,22 @@ fn router() -> Router<Body, Infallible> {
 async fn main() {
     let router = router();
 
-    // Create a Service from the router above to handle incoming requests.
-    let service = RouterService::new(router).unwrap();
+    let builder = RequestServiceBuilder::new(router).unwrap();
 
-    // The address on which the server will be listening.
     let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
-
-    // Create a server by passing the created service to `.serve` method.
-    let server = Server::bind(&addr).serve(service);
-
+    let listener = TcpListener::bind(addr).await.unwrap();
     println!("App is running on: {}", addr);
-    if let Err(err) = server.await {
-        eprintln!("Server error: {}", err);
+
+    loop {
+        let (stream, remote_addr) = listener.accept().await.unwrap();
+        let io = TokioIo::new(stream);
+        let service = builder.build(remote_addr);
+        tokio::task::spawn(async move {
+            let builder = conn::auto::Builder::new(TokioExecutor::new());
+            let res = builder.serve_connection(io, service).await;
+            if let Err(err) = res {
+                println!("Error serving connection: {:?}", err);
+            }
+        });
     }
 }
